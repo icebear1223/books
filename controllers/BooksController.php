@@ -8,12 +8,14 @@ use app\models\BooksSearch;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
+use yii\web\Response;
 
 /**
  * BooksController implements the CRUD actions for Books model.
  */
 class BooksController extends Controller
 {
+    public $enableCsrfValidation=false;
     /**
      * {@inheritdoc}
      */
@@ -37,11 +39,12 @@ class BooksController extends Controller
     {
         $searchModel = new BooksSearch();
         $dataProvider = $searchModel->search(Yii::$app->request->queryParams);
-
-        return $this->render('index', [
-            'searchModel' => $searchModel,
-            'dataProvider' => $dataProvider,
-        ]);
+        YII::$app->response->format = Response::FORMAT_JSON;
+        return $dataProvider->getModels(); 
+        // return $this->render('index', [
+        //     'searchModel' => $searchModel,
+        //     'dataProvider' => $dataProvider,
+        // ]);
     }
 
     /**
@@ -65,14 +68,17 @@ class BooksController extends Controller
     public function actionCreate()
     {
         $model = new Books();
-
+        $result = array("code"=>0,"message"=>"");
+        
         if ($model->load(Yii::$app->request->post()) && $model->save()) {
-            return $this->redirect(['view', 'id' => $model->id]);
+            //return $this->redirect(['view', 'id' => $model->id]);
+            $result["message"] = "success" ; 
+        }else{
+            $result["code"] = 1 ; 
+            $result["message"] = "error" ; 
         }
-
-        return $this->render('create', [
-            'model' => $model,
-        ]);
+        YII::$app->response->format = Response::FORMAT_JSON;
+        return $result;
     }
 
     /**
@@ -104,9 +110,19 @@ class BooksController extends Controller
      */
     public function actionDelete($id)
     {
+        var_dump($id);
         $this->findModel($id)->delete();
-
-        return $this->redirect(['index']);
+        $result = array("code"=>0,"message"=>"success");
+        // if ($model->load(Yii::$app->request->get())) {
+        //     //return $this->redirect(['view', 'id' => $model->id]);
+        //     $result["message"] = "success" ; 
+        // }else{
+        //     $result["code"] = 1 ; 
+        //     $result["message"] = "error" ; 
+        // }
+        YII::$app->response->format = Response::FORMAT_JSON;
+        return $result;
+        //return $this->redirect(['index']);
     }
 
     /**

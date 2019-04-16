@@ -18,6 +18,8 @@ class SiteController extends Controller
     /**
      * {@inheritdoc}
      */
+
+    public $enableCsrfValidation=false;
     public function behaviors()
     {
         return [
@@ -130,50 +132,62 @@ class SiteController extends Controller
     }
     public function actionDemo()
     {  
-        return $this->render('demo');
+        $rows = (new \yii\db\Query())
+            ->select(['*'])
+            ->from('books')
+            ->all();
+            return json_encode($rows);
+        //return $this->render('demo');
     }
     public function actionEntryform()
     {
         $model = new EntryForm;
         $val = ['name'=>'','writer'=>'','id'=>''];
+        $result = array("code"=>0,"message"=>"success");
         if ($model->load(Yii::$app->request->post()) && $model->validate()) {
             // 验证 $model 收到的数据
             // 做些有意义的事 ...
             $sql = "insert into `books` (`name`,`writer`) values ('".$model->name."','".$model->writer."')";
             Yii::$app->db->createCommand($sql)->execute();
-            return $this->render('demo',['sql'=>$sql]);
-            
         } else {
             // 无论是初始化显示还是数据验证错误
-            return $this->render('entryform', ['model' => $model,'val' => $val]);
+            //return $this->render('entryform', ['model' => $model,'val' => $val]);
+            $result = array("code"=>1,"message"=>"error");
         }
+        YII::$app->response->format = Response::FORMAT_JSON;
+        return $result;
     }
     public function actionDelete($id)
     {
+        $result = array("code"=>0,"message"=>"success");
         if($id) {
             $sql = "delete from books where id = '".$id."';";
             Yii::$app->db->createCommand($sql)->execute();
-
-            return $this->render('demo');
+            //return $this->render('demo');
         }else{
-
+            $result = array("code"=>1,"message"=>"error");
         }
+        YII::$app->response->format = Response::FORMAT_JSON;
+        return $result;
     }
     public function actionUpdate($id)
     {
         $model = new EntryForm;
+        $result = array("code"=>0,"message"=>"success");
         if($model->load(Yii::$app->request->post()) && $model->validate()){
             $sql = "update `books` set `name`='".$model->name."',`writer`='".$model->writer."' where `id` = '".$id."'";
             Yii::$app->db->createCommand($sql)->execute();
             // Yii::$app->db->createCommand()->update('books', ['name' => $model->name,'writer' => $model->writer], "id='".$model->id."'")->execute(); 
-            return $this->render('demo');
+            YII::$app->response->format = Response::FORMAT_JSON;
+            return $result;
         }else if($id) {
             $sql = "select * from `books` where id = '".$id."';";
             $val = Yii::$app->db->createCommand($sql)->queryOne(); 
-            return $this->render('updateform',[
-                'val' => $val,
-                'model' => $model
-            ]);
+            // return $this->render('updateform',[
+            //     'val' => $val,
+            //     'model' => $model
+            // ]);
+            return json_encode($val);
         }
     }
     public function actionUpdateform($id)
@@ -182,9 +196,10 @@ class SiteController extends Controller
             $sql = "select * from `books` where id = '".$id."';";
             $val = Yii::$app->db->createCommand($sql)->queryOne(); 
             var_dump($val);
-            return $this->render('updateform',[
-                'val' => $val
-            ]);
+            // return $this->render('updateform',[
+            //     'val' => $val
+            // ]);
+            return json_encode($val);
         }else{
 
         }
